@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.List;
 
 @RestController
@@ -28,16 +30,17 @@ public class ServiceInstanceRestController {
 
     @RequestMapping("/hello-app/{name}")
     public String callHelloWorldIndirectly (
-            @PathVariable String name) {
+            @PathVariable String name) throws MalformedURLException {
         List<ServiceInstance> instances = this.discoveryClient.getInstances(HELLO_API);
 
         if(CollectionUtils.isEmpty(instances)) {
             return "Error";
         }
         else {
-            URI endpoint = instances.get(0).getUri();
+            URI host = instances.get(0).getUri();
+            URL endpoint = new URL(host.toURL(), "/hello/"+name);
             RestTemplate restTemplate = new RestTemplate();
-            return restTemplate.getForObject(endpoint, String.class);
+            return restTemplate.getForObject(endpoint.toString(), String.class);
         }
     }
 }
